@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'IAM Policy for Landing Agentic Doc Marketplace - Secrets Manager and AWS Marketplace access'
+
+Parameters:
+  EKSClusterName:
+    Type: String
+    Description: Name of the EKS cluster
+    Default: va-dev
+  
+  Namespace:
+    Type: String
+    Description: Kubernetes namespace
+    Default: landing-agentic-doc
+  
+  SecretName:
+    Type: String
+    Description: AWS Secrets Manager secret name
+    Default: landing-agentic-doc/secrets
+  
+  PolicyName:
+    Type: String
+    Description: Name for the IAM policy
+    Default: landing-agentic-doc-marketplace-policy
+
+Resources:
+  AgenticDocMarketplacePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Ref PolicyName
+      Description: !Sub 'Policy for ${EKSClusterName}/${Namespace} - Secrets Manager and AWS Marketplace access'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SecretName}*'
+          - Effect: Allow
+            Action:
+              - aws-marketplace:RegisterUsage
+              - aws-marketplace:MeterUsage
+            Resource: '*'
+
+Outputs:
+  PolicyArn:
+    Description: ARN of the created IAM policy
+    Value: !Ref AgenticDocMarketplacePolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-PolicyArn'
+  
+  PolicyName:
+    Description: Name of the created IAM policy
+    Value: !Ref PolicyName
+    Export:
+      Name: !Sub '${AWS::StackName}-PolicyName'
+
